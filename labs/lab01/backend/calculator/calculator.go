@@ -30,6 +30,7 @@ func Divide(a, b float64) (float64, error) {
 		return 0, ErrDivisionByZero
 	}
 	return a / b, nil
+
 }
 
 // StringToFloat converts a string to float64
