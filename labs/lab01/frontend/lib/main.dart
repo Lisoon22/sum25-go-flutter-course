@@ -18,6 +18,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         // This is the theme of your application.
         //
+
         // TRY THIS: Try running your application with "flutter run". You'll see
         // the application has a purple toolbar. Then, without quitting the app,
         // try changing the seedColor in the colorScheme below to Colors.green
@@ -31,10 +32,11 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: const CounterApp(),
+
     );
   }
 }
@@ -49,7 +51,7 @@ class MyHomePage extends StatelessWidget {
         // TRY THIS: Try changing the color here to a specific color (to
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
         // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,    
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: const Text('Lab 01 Demo'),
@@ -74,7 +76,7 @@ class MyHomePage extends StatelessWidget {
             const Text(
               'Counter App Example',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            ),  
             const SizedBox(height: 8),
             const CounterApp(),
             const SizedBox(height: 24),
