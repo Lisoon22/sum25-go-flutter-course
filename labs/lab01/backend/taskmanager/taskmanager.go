@@ -33,6 +33,7 @@ func NewTaskManager() *TaskManager {
 		tasks:  make(map[int]Task),
 		nextID: 1,
 	}
+
 }
 
 // AddTask adds a new task to the manager, returns an error if the title is empty, and increments the nextID
@@ -74,7 +75,7 @@ func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) 
 // DeleteTask removes a task from the manager, returns an error if the task is not found
 func (tm *TaskManager) DeleteTask(id int) error {
 	// TODO: Implement this function
-	if _, ok := tm.tasks[id]; !ok {
+	if _, accept := tm.tasks[id]; !accept {
 		return ErrTaskNotFound
 	}
 	delete(tm.tasks, id)
