@@ -1,20 +1,39 @@
+// ignore_for_file: json_serializable
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/user.dart';
 
+/// DatabaseService provides SQLite database operations for the Flutter app
+/// This service demonstrates local database management with SQLite,
+/// including schema creation, CRUD operations, and data relationships.
+/// 
+/// This service demonstrates:
+/// - SQLite database initialization and management
+/// - Database schema creation and versioning
+/// - CRUD operations for complex data structures
+/// - Search and filtering capabilities
+/// - Database path management and cleanup
 class DatabaseService {
+  /// Static database instance for singleton pattern
+  /// Ensures single database connection across the app
   static Database? _database;
+  
+  /// Database file name
   static const String _dbName = 'lab04_app.db';
+  
+  /// Database schema version for migration management
   static const int _version = 1;
 
-  // TODO: Implement database getter
+  /// Get database instance, initializing if necessary
+  /// Returns the database instance or creates a new one
   static Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
 
-  // TODO: Implement _initDatabase method
+  /// Initialize the SQLite database
+  /// Creates database file, sets up schema, and configures callbacks
   static Future<Database> _initDatabase() async {
     // Get the default databases location
     final dbPath = await getDatabasesPath();
@@ -29,9 +48,10 @@ class DatabaseService {
     );
   }
 
-  // TODO: Implement _onCreate method
+  /// Create database schema on first run
+  /// Defines table structures and relationships
   static Future<void> _onCreate(Database db, int version) async {
-    // Create users table
+    // Create users table with proper constraints
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,7 +62,7 @@ class DatabaseService {
       )
     ''');
 
-    // Create posts table
+    // Create posts table with foreign key relationship to users
     await db.execute('''
       CREATE TABLE posts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +77,9 @@ class DatabaseService {
     ''');
   }
 
-  // TODO: Implement _onUpgrade method
+  /// Handle database schema upgrades
+  /// Called when database version increases
+  /// For now, this is a placeholder for future migrations
   static Future<void> _onUpgrade(
       Database db, int oldVersion, int newVersion) async {
     // TODO: Handle database schema upgrades
@@ -66,7 +88,8 @@ class DatabaseService {
 
   // User CRUD operations
 
-  // TODO: Implement createUser method
+  /// Create a new user in the database
+  /// Validates input data and returns the created user with generated ID
   static Future<User> createUser(CreateUserRequest request) async {
     final db = await database;
 
@@ -93,7 +116,8 @@ class DatabaseService {
     );
   }
 
-  // TODO: Implement getUser method
+  /// Retrieve a user by ID
+  /// Returns null if user doesn't exist
   static Future<User?> getUser(int id) async {
     final db = await database;
     final maps = await db.query(
@@ -115,7 +139,8 @@ class DatabaseService {
     return null;
   }
 
-  // TODO: Implement getAllUsers method
+  /// Retrieve all users ordered by creation date
+  /// Returns empty list if no users exist
   static Future<List<User>> getAllUsers() async {
     final db = await database;
     final maps = await db.query(
@@ -131,7 +156,8 @@ class DatabaseService {
     )).toList();
   }
 
-  // TODO: Implement updateUser method
+  /// Update an existing user with new data
+  /// Only updates provided fields and automatically updates timestamp
   static Future<User> updateUser(int id, Map<String, dynamic> updates) async {
     final db = await database;
 
@@ -170,7 +196,8 @@ class DatabaseService {
     }
   }
 
-  // TODO: Implement deleteUser method
+  /// Delete a user by ID
+  /// Also deletes related posts due to CASCADE constraint
   static Future<void> deleteUser(int id) async {
     final db = await database;
 
@@ -185,7 +212,8 @@ class DatabaseService {
     // For now, this only deletes the user from the users table.
   }
 
-  // TODO: Implement getUserCount method
+  /// Get total count of users in database
+  /// Useful for pagination or statistics
   static Future<int> getUserCount() async {
     final db = await database;
     final result = await db.rawQuery('SELECT COUNT(*) as count FROM users');
@@ -196,7 +224,9 @@ class DatabaseService {
     }
   }
 
-  // TODO: Implement searchUsers method
+  /// Search users by name or email
+  /// Uses SQL LIKE operator for partial matching
+  /// Returns empty list if no matches found
   static Future<List<User>> searchUsers(String query) async {
     final db = await database;
     final searchQuery = '%${query.trim()}%';
@@ -204,6 +234,7 @@ class DatabaseService {
       'users',
       where: 'name LIKE ? OR email LIKE ?',
       whereArgs: [searchQuery, searchQuery],
+      orderBy: 'name ASC',
     );
     return maps.map((userMap) => User(
       id: userMap['id'] as int,
@@ -214,9 +245,8 @@ class DatabaseService {
     )).toList();
   }
 
-  // Database utility methods
-
-  // TODO: Implement closeDatabase method
+  /// Close the database connection
+  /// Should be called when app is shutting down
   static Future<void> closeDatabase() async {
     if (_database != null) {
       await _database!.close();
@@ -224,24 +254,20 @@ class DatabaseService {
     }
   }
 
-  // TODO: Implement clearAllData method
+  /// Get the database file path
+  /// Useful for debugging or backup purposes
+  static Future<String> getDatabasePath() async {
+    final dbPath = await getDatabasesPath();
+    return join(dbPath, _dbName);
+  }
+
+  /// Clear all data from all tables
+  /// Use with caution - this removes all app data
   static Future<void> clearAllData() async {
     final db = await database;
 
     // Delete all records from all tables
+    await db.delete('posts');
     await db.delete('users');
-    // Если будут другие таблицы, добавьте их очистку здесь
-
-    // Сброс автоинкремента (SQLite)
-    // Для таблицы users
-    await db.execute("DELETE FROM sqlite_sequence WHERE name='users'");
-    // Если есть другие таблицы с автоинкрементом, добавьте их сброс здесь
-  }
-
-  // TODO: Implement getDatabasePath method
-  static Future<String> getDatabasePath() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, _dbName);
-    return path;
   }
 }

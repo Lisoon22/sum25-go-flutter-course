@@ -3,9 +3,40 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/pressly/goose/v3"
 )
+
+// getMigrationsPath returns the correct path to migrations directory
+// This function works regardless of which directory the tests are run from
+func getMigrationsPath() string {
+	// Try different possible paths
+	possiblePaths := []string{
+		"./migrations",     // From backend directory
+		"../migrations",    // From subdirectories
+		"../../migrations", // From deeper subdirectories
+		"migrations",       // From root
+	}
+
+	for _, path := range possiblePaths {
+		if isDir(path) {
+			return path
+		}
+	}
+
+	// If no path found, return the most likely one
+	return "./migrations"
+}
+
+// isDir checks if the given path is a directory
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
+}
 
 // RunMigrations runs database migrations using goose
 func RunMigrations(db *sql.DB) error {
@@ -19,7 +50,7 @@ func RunMigrations(db *sql.DB) error {
 	}
 
 	// Get path to migrations directory (relative to backend directory)
-	migrationsDir := "./migrations"
+	migrationsDir := getMigrationsPath()
 
 	// Run migrations from the migrations directory
 	if err := goose.Up(db, migrationsDir); err != nil {
@@ -41,7 +72,7 @@ func RollbackMigration(db *sql.DB) error {
 		return fmt.Errorf("failed to set goose dialect: %v", err)
 	}
 
-	migrationsDir := "./migrations"
+	migrationsDir := getMigrationsPath()
 
 	if err := goose.Down(db, migrationsDir); err != nil {
 		return fmt.Errorf("failed to rollback migration: %v", err)
@@ -60,7 +91,7 @@ func GetMigrationStatus(db *sql.DB) error {
 		return fmt.Errorf("failed to set goose dialect: %v", err)
 	}
 
-	migrationsDir := "./migrations"
+	migrationsDir := getMigrationsPath()
 
 	err := goose.Status(db, migrationsDir)
 	if err != nil {
@@ -76,7 +107,7 @@ func CreateMigration(name string) error {
 	if name == "" {
 		return fmt.Errorf("migration name cannot be empty")
 	}
-	migrationsDir := "./migrations"
+	migrationsDir := getMigrationsPath()
 
 	err := goose.Create(nil, migrationsDir, name, "sql")
 	if err != nil {

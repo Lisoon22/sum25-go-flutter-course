@@ -8,37 +8,44 @@ import (
 )
 
 // User represents a user in the system
+// This model demonstrates manual SQL operations with database/sql package
+// It includes validation, GORM hooks, and manual row scanning capabilities
 type User struct {
-	ID        int       `json:"id" db:"id"`
-	Name      string    `json:"name" db:"name"`
-	Email     string    `json:"email" db:"email"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID        int       `json:"id" db:"id"`                 // Primary key, auto-increment
+	Name      string    `json:"name" db:"name"`             // User's display name
+	Email     string    `json:"email" db:"email"`           // Unique email address
+	CreatedAt time.Time `json:"created_at" db:"created_at"` // Record creation timestamp
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"` // Last update timestamp
 }
 
 // CreateUserRequest represents the payload for creating a user
+// This struct is used for API input validation and transformation
 type CreateUserRequest struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name  string `json:"name"`  // User's display name
+	Email string `json:"email"` // User's email address
 }
 
 // UpdateUserRequest represents the payload for updating a user
+// Uses pointers to distinguish between "not provided" and "empty value"
 type UpdateUserRequest struct {
-	Name  *string `json:"name,omitempty"`
-	Email *string `json:"email,omitempty"`
+	Name  *string `json:"name,omitempty"`  // Optional name update
+	Email *string `json:"email,omitempty"` // Optional email update
 }
 
-// TODO: Implement Validate method for User
+// Validate performs data validation for User model
+// Ensures data integrity before database operations
 func (u *User) Validate() error {
-	// Name should not be empty and should be at least 2 characters
+	// Name validation: must be at least 2 characters
 	if len(u.Name) < 2 {
 		return fmt.Errorf("name must be at least 2 characters")
 	}
-	// Email should be valid format (simple regex)
+
+	// Email validation: must not be empty
 	if u.Email == "" {
 		return fmt.Errorf("email must not be empty")
 	}
-	// Very simple email validation
+
+	// Email format validation using regex
 	emailRe := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	if !emailRe.MatchString(u.Email) {
 		return fmt.Errorf("email is not valid")
@@ -46,17 +53,20 @@ func (u *User) Validate() error {
 	return nil
 }
 
-// TODO: Implement Validate method for CreateUserRequest
+// Validate performs data validation for CreateUserRequest
+// Validates input data before creating a new user
 func (req *CreateUserRequest) Validate() error {
-	// Name should not be empty and should be at least 2 characters
+	// Name validation: must be at least 2 characters
 	if len(req.Name) < 2 {
 		return fmt.Errorf("name must be at least 2 characters")
 	}
-	// Email should not be empty
+
+	// Email validation: must not be empty
 	if req.Email == "" {
 		return fmt.Errorf("email must not be empty")
 	}
-	// Simple email validation
+
+	// Email format validation using regex
 	emailRe := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	if !emailRe.MatchString(req.Email) {
 		return fmt.Errorf("email is not valid")
@@ -64,7 +74,8 @@ func (req *CreateUserRequest) Validate() error {
 	return nil
 }
 
-// TODO: Implement ToUser method for CreateUserRequest
+// ToUser converts CreateUserRequest to User model
+// Sets default timestamps and prepares for database insertion
 func (req *CreateUserRequest) ToUser() *User {
 	return &User{
 		Name:      req.Name,
@@ -74,7 +85,8 @@ func (req *CreateUserRequest) ToUser() *User {
 	}
 }
 
-// TODO: Implement ScanRow method for User
+// ScanRow manually scans a database row into User struct
+// This method is used with database/sql package for manual SQL operations
 func (u *User) ScanRow(row *sql.Row) error {
 	if row == nil {
 		return fmt.Errorf("row is nil")
@@ -88,10 +100,12 @@ func (u *User) ScanRow(row *sql.Row) error {
 	)
 }
 
-// TODO: Implement ScanRows method for User slice
+// ScanUsers scans multiple database rows into a slice of User structs
+// This function is used for batch operations with database/sql package
 func ScanUsers(rows *sql.Rows) ([]User, error) {
 	defer rows.Close()
 	var users []User
+
 	for rows.Next() {
 		var u User
 		err := rows.Scan(
@@ -106,6 +120,7 @@ func ScanUsers(rows *sql.Rows) ([]User, error) {
 		}
 		users = append(users, u)
 	}
+
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
